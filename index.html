@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Nuestro Primer Mes ❤️</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Montserrat:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,600;0,700;1,400&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        wine: {
+                            900: '#140608',
+                            800: '#2b090f',
+                            700: '#4a101a',
+                            600: '#721927',
+                        },
+                        blush: '#f5d6dc',
+                        gold: '#d4af37',
+                    },
+                    fontFamily: {
+                        serif: ['Playfair Display', 'serif'],
+                        sans: ['Montserrat', 'sans-serif'],
+                        cinzel: ['Cinzel', 'serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Optimización móvil y viewport dinámico (100dvh) */
+        html, body {
+            min-height: 100dvh;
+            background: radial-gradient(circle at top, #2b090f 0%, #140608 60%, #0a0304 100%);
+            color: #fce7eb;
+            overflow-x: hidden;
+            max-width: 100vw;
+            touch-action: pan-y;
+            -webkit-tap-highlight-color: transparent;
+            word-break: break-word;
+            overflow-wrap: anywhere;
+        }
+
+        /* Safe area inset support para pantallas notch de iPhone/Android */
+        .safe-area-padding {
+            padding-top: max(1.25rem, env(safe-area-inset-top));
+            padding-bottom: max(2rem, env(safe-area-inset-bottom));
+        }
+
+        /* Canvas de corazones interactivo en el fondo */
+        #hearts-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Animación del disco vinilo cuando suena la música */
+        @keyframes rotateVinyl {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .animate-spin-slow {
+            animation: rotateVinyl 6s linear infinite;
+        }
+        .paused {
+            animation-play-state: paused !important;
+        }
+
+        /* Estilo tarjeta foto polaroid */
+        .polaroid {
+            background: #ffffff;
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.7), 0 0 15px rgba(212, 175, 55, 0.15);
+            transition: transform 0.3s ease;
+        }
+
+        /* Cristal esmerilado translúcido */
+        .glass-card {
+            background: rgba(43, 9, 15, 0.65);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1px solid rgba(245, 214, 220, 0.15);
+        }
+
+        /* Scroll suave para la carta secreta en dispositivos móviles */
+        .touch-scroll {
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* Animación suave para la apertura de carta */
+        .modal-enter {
+            animation: scaleUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes scaleUp {
+            from { opacity: 0; transform: scale(0.92); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        /* Ocultar IFrame de YouTube de forma segura */
+        #yt-player-container {
+            position: fixed;
+            top: -9999px;
+            left: -9999px;
+            width: 1px;
+            height: 1px;
+            opacity: 0;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body class="font-sans antialiased relative min-h-[100dvh] flex flex-col justify-between selection:bg-rose-900 selection:text-white">
+
+    <!-- CANVAS INTERACTIVO DE CORAZONES FLOTANTES -->
+    <canvas id="hearts-canvas"></canvas>
+
+    <!-- REPRODUCTOR OCULTO DE YOUTUBE IFRAME API -->
+    <div id="yt-player-container">
+        <div id="yt-player"></div>
+    </div>
+
+    <!-- PANTALLA DE BIENVENIDA / ACTIVACIÓN DE AUDIO MÓVIL (SPLASH SCREEN) -->
+    <div id="splash-screen" class="fixed inset-0 z-50 flex flex-col items-center justify-center p-6 bg-gradient-to-b from-[#1c060b] via-[#140608] to-[#0a0304] text-center transition-opacity duration-500">
+        <div class="glass-card max-w-sm w-full p-8 rounded-3xl border border-gold/40 shadow-2xl flex flex-col items-center">
+            <div class="w-20 h-20 rounded-full bg-rose-900/60 border-2 border-gold flex items-center justify-center text-4xl mb-5 shadow-lg animate-pulse">
+                ❤️
+            </div>
+            <h2 class="text-2xl font-serif font-bold text-white mb-2">Para ti, mi amor</h2>
+            <p class="text-xs text-rose-200/80 mb-6 leading-relaxed font-light">
+                He preparado esta pequeña sorpresa para celebrar nuestro primer mes juntos. Toca el botón para empezar.
+            </p>
+            <button id="start-btn" class="w-full py-4 px-6 rounded-full bg-gradient-to-r from-rose-700 via-rose-600 to-wine-700 text-white font-serif font-bold text-base tracking-wide shadow-xl border border-gold/50 active:scale-95 transition flex items-center justify-center gap-3">
+                <span>Entrar a tu sorpresa</span>
+                <span class="text-gold">✨</span>
+            </button>
+            <p class="text-[10px] text-rose-300/50 mt-4 italic">Con sonido de Extremoduro 🎶</p>
+        </div>
+    </div>
+
+    <!-- WIDGET REPRODUCTOR DE MÚSICA FLOTANTE -->
+    <div class="fixed top-4 right-4 z-40 flex items-center gap-3">
+        <div id="music-notification" class="hidden sm:block text-xs text-rose-200/90 bg-black/70 px-3 py-1.5 rounded-full border border-rose-500/30 backdrop-blur-md transition-all duration-300">
+            <span id="song-title">Cargando canción...</span>
+        </div>
+        <button id="music-toggle" aria-label="Reproducir o pausar música" class="relative group p-2 rounded-full glass-card border border-gold/40 shadow-xl focus:outline-none focus:ring-2 focus:ring-gold/60 transition active:scale-95">
+            <!-- Icono de disco vinilo -->
+            <div id="vinyl-disc" class="w-11 h-11 rounded-full bg-neutral-900 border-2 border-neutral-700 flex items-center justify-center relative shadow-inner animate-spin-slow paused">
+                <div class="absolute inset-1 rounded-full border border-neutral-800"></div>
+                <div class="absolute inset-2 rounded-full border border-neutral-700/60"></div>
+                <div class="w-4 h-4 rounded-full bg-rose-700 border border-gold flex items-center justify-center">
+                    <div class="w-1 h-1 rounded-full bg-black"></div>
+                </div>
+            </div>
+            <span id="music-indicator" class="absolute -bottom-1 -right-1 flex h-4 w-4">
+                <span id="ping-span" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75 hidden"></span>
+                <span id="music-symbol" class="relative inline-flex rounded-full h-4 w-4 bg-rose-900/90 border border-gold text-[9px] text-gold items-center justify-center font-bold">♫</span>
+            </span>
+        </button>
+    </div>
+
+    <!-- CONTENIDO PRINCIPAL DE LA PÁGINA -->
+    <main class="relative z-10 max-w-xl mx-auto px-4 sm:px-5 safe-area-padding flex flex-col items-center">
+        
+        <!-- ENCABEZADO PRINCIPAL -->
+        <header class="text-center w-full mt-4 mb-8">
+            <div id="header-tag" class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-gold/40 bg-wine-800/80 backdrop-blur-md shadow-md mb-4 text-gold text-xs uppercase tracking-widest font-cinzel">
+                <!-- Rellenado dinámicamente desde CONFIG -->
+            </div>
+            
+            <h1 id="header-title" class="text-3xl sm:text-5xl font-serif font-bold text-white tracking-tight drop-shadow-md">
+                <!-- Rellenado dinámicamente desde CONFIG -->
+            </h1>
+            
+            <p id="header-subtitle" class="text-rose-200/80 text-sm mt-3 font-light max-w-xs sm:max-w-md mx-auto leading-relaxed">
+                <!-- Rellenado dinámicamente desde CONFIG -->
+            </p>
+        </header>
+
+        <!-- CONTADOR EN VIVO (DESDE EL 25 DE SEPTIEMBRE DE 2026) -->
+        <section class="w-full glass-card rounded-3xl p-4 sm:p-6 mb-8 shadow-2xl border border-white/10 text-center">
+            <p class="text-xs uppercase tracking-widest text-rose-300/80 font-semibold mb-4">Tiempo caminando de la mano</p>
+            <div class="grid grid-cols-4 gap-2 text-center">
+                <div class="bg-black/40 rounded-2xl p-2.5 sm:p-3 border border-rose-500/15 shadow-inner">
+                    <span id="count-days" class="block text-2xl sm:text-3xl font-cinzel font-bold text-white">0</span>
+                    <span class="text-[10px] sm:text-xs text-rose-200/70 font-medium uppercase tracking-wider">Días</span>
+                </div>
+                <div class="bg-black/40 rounded-2xl p-2.5 sm:p-3 border border-rose-500/15 shadow-inner">
+                    <span id="count-hours" class="block text-2xl sm:text-3xl font-cinzel font-bold text-rose-200">00</span>
+                    <span class="text-[10px] sm:text-xs text-rose-200/70 font-medium uppercase tracking-wider">Horas</span>
+                </div>
+                <div class="bg-black/40 rounded-2xl p-2.5 sm:p-3 border border-rose-500/15 shadow-inner">
+                    <span id="count-minutes" class="block text-2xl sm:text-3xl font-cinzel font-bold text-white">00</span>
+                    <span class="text-[10px] sm:text-xs text-rose-200/70 font-medium uppercase tracking-wider">Min</span>
+                </div>
+                <div class="bg-black/40 rounded-2xl p-2.5 sm:p-3 border border-rose-500/15 shadow-inner">
+                    <span id="count-seconds" class="block text-2xl sm:text-3xl font-cinzel font-bold text-gold">00</span>
+                    <span class="text-[10px] sm:text-xs text-rose-200/70 font-medium uppercase tracking-wider">Seg</span>
+                </div>
+            </div>
+            <p class="text-[11px] text-rose-300/60 mt-4 italic">"Y te busco en cada esquina, en cada trozo de papel..."</p>
+        </section>
+
+        <!-- CONTENEDOR DINÁMICO DE TARJETAS DE HISTORIAS Y FOTOS -->
+        <div id="cards-container" class="w-full space-y-6 sm:space-y-8 mb-10">
+            <!-- Se llena dinámicamente desde el objeto CONFIG -->
+        </div>
+
+        <!-- BOTÓN DE CARTA SECRETA -->
+        <div class="w-full text-center pb-6">
+            <button id="open-letter-btn" class="relative group px-8 py-4 rounded-full bg-gradient-to-r from-rose-700 via-rose-600 to-wine-700 text-white font-serif font-bold tracking-wide shadow-2xl border border-gold/40 hover:brightness-110 active:scale-95 transition-all duration-300">
+                <span class="flex items-center gap-2 justify-center text-sm sm:text-base">
+                    <span>Abrir mi carta para ti</span>
+                    <span class="text-gold text-xl">💌</span>
+                </span>
+            </button>
+            <p class="text-[11px] text-rose-300/60 mt-2">Haz clic aquí para leer algo más personal</p>
+        </div>
+    </main>
+
+    <!-- MODAL DE LA CARTA SECRETA -->
+    <div id="letter-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md hidden opacity-0 transition-opacity duration-300">
+        <div class="relative w-full max-w-lg bg-[#24080e] rounded-3xl p-6 sm:p-8 border border-gold/40 shadow-2xl overflow-y-auto max-h-[85dvh] modal-enter touch-scroll">
+            <button id="close-letter-btn" aria-label="Cerrar carta" class="absolute top-4 right-4 text-rose-300 hover:text-white p-3 rounded-full bg-black/30 border border-white/10 focus:outline-none active:scale-95 transition">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+
+            <div class="flex justify-center mb-3">
+                <div id="modal-emoji" class="w-14 h-14 rounded-full bg-rose-900/80 border border-gold/60 flex items-center justify-center text-2xl shadow-lg">
+                    <!-- Rellenado dinámicamente desde CONFIG -->
+                </div>
+            </div>
+
+            <h3 id="modal-title" class="text-2xl font-serif text-white font-bold text-center mb-1"></h3>
+            <p id="modal-subtitle" class="text-center text-xs text-gold/80 font-cinzel mb-5 uppercase tracking-wider"></p>
+
+            <div id="modal-paragraphs" class="space-y-4 text-sm text-rose-100/90 leading-relaxed font-light text-justify border-t border-rose-500/20 pt-4">
+                <!-- Rellenado dinámicamente desde CONFIG -->
+            </div>
+            
+            <div id="modal-signature" class="text-right font-serif text-base text-gold pt-4 border-t border-rose-500/10 mt-6">
+                <!-- Rellenado dinámicamente desde CONFIG -->
+            </div>
+        </div>
+    </div>
+
+    <!-- API IFRAME DE YOUTUBE -->
+    <script src="https://www.youtube.com/iframe_api"></script>
+
+    <!-- LÓGICA DE LA APLICACIÓN Y PANEL DE CONFIGURACIÓN -->
+    <script>
+        /* =========================================================================
+           ⚙️ PANEL ÚNICO DE CONFIGURACIÓN Y PERSONALIZACIÓN (CONFIG)
+           Modifica todo el contenido desde aquí fácilmente.
+           ========================================================================= */
+        const CONFIG = {
+            
+            // 📅 1. FECHA DE INICIO DE LA RELACIÓN
+            // Formato: new Date(Año, Mes - 1, Día, Hora, Minutos, Segundos)
+            // Septiembre es el mes indexado 8 (Enero=0, Septiembre=8, Diciembre=11).
+            fechaInicio: new Date(2026, 9, 10, 0, 0, 0), // 10 de Octubre de 2026 a las 00:00:00
+
+            // 🎵 2. CANCIÓN DE FONDO EN YOUTUBE (EXTREMODURO)
+            // Puedes pegar el enlace completo de YouTube o directamente el ID del vídeo.
+            musica: {
+                tituloMostrar: "Extremoduro - Si te vas...",
+                youtubeUrl: "https://www.youtube.com/watch?v=9Iou2gjCGnI", // Pega aquí tu enlace de YouTube
+                volumen: 80 // Volumen de 0 a 100
+            },
+
+            // 👑 3. ENCABEZADO Y TÍTULOS
+            cabecera: {
+                etiquetaHito: "✦ Primer Mesiversario ✦",
+                tituloPrincipal: 'Un mes <span class="text-transparent bg-clip-text bg-gradient-to-r from-rose-300 via-rose-200 to-gold italic">contigo</span>',
+                subtitulo: "Parece que fue ayer cuando empezó todo, pero cada segundo a tu lado se convierte en un recuerdo inolvidable."
+            },
+
+            // 📸 4. TARJETAS ESCALABLES (Puedes añadir todas las tarjetas que quieras)
+            tarjetas: [
+                {
+                    tipo: "polaroid",
+                    imagenUrl: "https://images.unsplash.com/photo-1518199266791-5375a83190b7?auto=format&fit=crop&w=700&q=80",
+                    piePolaroid: "Donde empezó nuestra historia 🌿",
+                    titulo: "El día en que cambió todo",
+                    parrafos: [
+                        "Parecía un día normal, pero mirarte fue darme cuenta de que las mejores cosas no se planean; simplemente suceden y te revolucionan el mundo. En este mes he aprendido que estar a tu lado convierte cualquier instante en un refugio.",
+                        "Me encanta la forma en la que te ríes y cómo logras calmar mis días más caóticos con una sola palabra o una sonrisa."
+                    ]
+                },
+                {
+                    tipo: "diario",
+                    capitulo: "Capítulo I",
+                    etiquetaFecha: "Desde el 25 de Septiembre",
+                    titulo: "Lo que más valoro de nosotros",
+                    parrafos: [
+                        "Quería hacerte algo con mis propias manos y con lo que estudio todos los días. Porque programar código está genial, pero encontrar a alguien con quien compartir mis silencios, mis bromas y mis canciones favoritas de Extremoduro es algo que ningún algoritmo puede calcular.",
+                        "Gracias por cada paseo, por cada mirada en la que sobran las explicaciones y por enseñarme que en apenas cuatro semanas se puede construir un hogar en el pecho de otra persona."
+                    ]
+                }
+            ],
+
+            // ✨ 5. RECUERDOS Y MOMENTOS DESTACADOS
+            momentosFav: {
+                titulo: "Momentos que guardo de este mes",
+                icono: "✨",
+                lista: [
+                    "La primera vez que nos quedamos hablando durante horas sin darnos cuenta de la hora.",
+                    "Esas canciones compartidas que ahora ya no puedo escuchar sin acordarme de ti.",
+                    "Ver cómo este cuarto se llena de vida simplemente porque estás en él."
+                ]
+            },
+
+            // 💌 6. CARTA SECRETA MODAL
+            cartaSecreta: {
+                emojiIcono: "💍",
+                tituloModal: "Para la persona más especial",
+                subtituloModal: "Feliz primer mes, mi amor",
+                parrafos: [
+                    "Si estás leyendo esto es porque ya estás aquí conmigo en mi cuarto, y aunque veas los detalles hechos a mano alrededor, no quería dejar pasar la oportunidad de regalarte esta pequeña aplicación hecha con lo que estudio.",
+                    "Este primer mes ha sido solo el primer capítulo. Me haces inmensamente feliz, me motivas a ser mejor y adoro cada segundo que pasamos juntos, ya sea paseando, hablando sin parar o escuchando música juntos.",
+                    "Gracias por llegar a mi vida y hacer de este mes el más bonito de todos."
+                ],
+                firmaLinea1: "Con todo mi amor siempre,",
+                firmaLinea2: "Tu programador favorito ❤️"
+            }
+        };
+
+        /* =========================================================================
+           🛠️ EXTRACCIÓN DE ID DE YOUTUBE & INTEGRACIÓN DE REPRODUCTOR
+           ========================================================================= */
+        function extractYouTubeId(urlOrId) {
+            if (!urlOrId) return 'Gj9Z59d332A'; // ID por defecto de Extremoduro - Si te vas
+            if (urlOrId.length === 11 && !urlOrId.includes('/') && !urlOrId.includes('.')) {
+                return urlOrId;
+            }
+            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+            const match = urlOrId.match(regExp);
+            return (match && match[2].length === 11) ? match[2] : 'Gj9Z59d332A';
+        }
+
+        let ytPlayer = null;
+        let isMusicPlaying = false;
+        const videoId = extractYouTubeId(CONFIG.musica.youtubeUrl);
+
+        function onYouTubeIframeAPIReady() {
+            ytPlayer = new YT.Player('yt-player', {
+                height: '0',
+                width: '0',
+                videoId: videoId,
+                playerVars: {
+                    'autoplay': 0,
+                    'controls': 0,
+                    'disablekb': 1,
+                    'fs': 0,
+                    'loop': 1,
+                    'playlist': videoId,
+                    'playsinline': 1,
+                    'rel': 0
+                },
+                events: {
+                    'onReady': onPlayerReady,
+                    'onStateChange': onPlayerStateChange
+                }
+            });
+        }
+
+        function onPlayerReady(event) {
+            event.target.setVolume(CONFIG.musica.volumen || 80);
+        }
+
+        function onPlayerStateChange(event) {
+            const vinylDisc = document.getElementById('vinyl-disc');
+            const pingSpan = document.getElementById('ping-span');
+            const musicSymbol = document.getElementById('music-symbol');
+
+            if (event.data === YT.PlayerState.PLAYING) {
+                isMusicPlaying = true;
+                vinylDisc.classList.remove('paused');
+                pingSpan.classList.remove('hidden');
+                musicSymbol.classList.add('bg-rose-600', 'text-white');
+                musicSymbol.classList.remove('bg-rose-900/90', 'text-gold');
+            } else {
+                isMusicPlaying = false;
+                vinylDisc.classList.add('paused');
+                pingSpan.classList.add('hidden');
+                musicSymbol.classList.remove('bg-rose-600', 'text-white');
+                musicSymbol.classList.add('bg-rose-900/90', 'text-gold');
+            }
+        }
+
+        function toggleMusic() {
+            if (!ytPlayer || typeof ytPlayer.playVideo !== 'function') return;
+
+            if (isMusicPlaying) {
+                ytPlayer.pauseVideo();
+            } else {
+                ytPlayer.playVideo();
+                ytPlayer.unMute();
+            }
+        }
+
+        document.getElementById('music-toggle').addEventListener('click', toggleMusic);
+
+        /* =========================================================================
+           🚀 INICIALIZACIÓN DE CONTENIDOS DINÁMICOS
+           ========================================================================= */
+        function initAppContent() {
+            document.getElementById('song-title').textContent = CONFIG.musica.tituloMostrar;
+
+            // Header
+            document.getElementById('header-tag').innerHTML = `<span>✦</span><span>${CONFIG.cabecera.etiquetaHito.replace(/✦/g, '').trim()}</span><span>✦</span>`;
+            document.getElementById('header-title').innerHTML = CONFIG.cabecera.tituloPrincipal;
+            document.getElementById('header-subtitle').textContent = CONFIG.cabecera.subtitulo;
+
+            // Tarjetas
+            const container = document.getElementById('cards-container');
+            container.innerHTML = '';
+
+            CONFIG.tarjetas.forEach(card => {
+                const article = document.createElement('article');
+                article.className = "glass-card rounded-3xl p-5 sm:p-6 shadow-xl border border-white/10 transition duration-300";
+
+                let html = '';
+                if (card.tipo === 'polaroid') {
+                    html += `
+                        <div class="polaroid p-3 pb-5 rounded-xl rotate-[-1.5deg] mb-5 mx-auto max-w-sm">
+                            <div class="w-full h-52 sm:h-60 bg-neutral-200 rounded-lg overflow-hidden flex items-center justify-center relative">
+                                <img src="${card.imagenUrl}" alt="Foto recubierta" class="w-full h-full object-cover" onerror="this.src='https://placehold.co/600x400/2b090f/f5d6dc?text=Nuestra+Foto+Juntos'">
+                            </div>
+                            <p class="text-neutral-800 text-center font-serif text-xs sm:text-sm mt-3 font-semibold tracking-wide">${card.piePolaroid}</p>
+                        </div>
+                    `;
+                } else if (card.tipo === 'diario') {
+                    html += `
+                        <div class="flex items-center justify-between border-b border-rose-500/20 pb-3 mb-4">
+                            <span class="text-xs uppercase font-cinzel text-gold tracking-widest">${card.capitulo || 'Recuerdo'}</span>
+                            <span class="text-xs text-rose-300/60 font-mono">${card.etiquetaFecha || ''}</span>
+                        </div>
+                    `;
+                }
+
+                html += `
+                    <div class="space-y-3">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-rose-500 shrink-0"></span>
+                            <h2 class="text-lg sm:text-xl font-serif text-white font-bold leading-tight">${card.titulo}</h2>
+                        </div>
+                        ${card.parrafos.map(p => `<p class="text-rose-100/90 text-sm leading-relaxed font-light text-justify">${p}</p>`).join('')}
+                    </div>
+                `;
+
+                article.innerHTML = html;
+                container.appendChild(article);
+            });
+
+            // Momentos Favoritos
+            if (CONFIG.momentosFav && CONFIG.momentosFav.lista.length > 0) {
+                const momentsArticle = document.createElement('article');
+                momentsArticle.className = "glass-card rounded-3xl p-5 sm:p-6 shadow-xl border border-white/10";
+                momentsArticle.innerHTML = `
+                    <h3 class="text-base sm:text-lg font-serif text-white font-semibold mb-4 flex items-center gap-2">
+                        <span>${CONFIG.momentosFav.icono || '✨'}</span> ${CONFIG.momentosFav.titulo}
+                    </h3>
+                    <ul class="space-y-3 text-sm text-rose-100/90 font-light">
+                        ${CONFIG.momentosFav.lista.map(item => `
+                            <li class="flex items-start gap-3 bg-black/30 p-3 rounded-2xl border border-rose-500/10">
+                                <span class="text-rose-400 mt-0.5 shrink-0">❤️</span>
+                                <span>${item}</span>
+                            </li>
+                        `).join('')}
+                    </ul>
+                `;
+                container.appendChild(momentsArticle);
+            }
+
+            // Carta Secreta Modal
+            document.getElementById('modal-emoji').textContent = CONFIG.cartaSecreta.emojiIcono;
+            document.getElementById('modal-title').textContent = CONFIG.cartaSecreta.tituloModal;
+            document.getElementById('modal-subtitle').textContent = CONFIG.cartaSecreta.subtituloModal;
+            
+            const modalParagraphs = document.getElementById('modal-paragraphs');
+            modalParagraphs.innerHTML = CONFIG.cartaSecreta.parrafos.map(p => `<p>${p}</p>`).join('');
+
+            const modalSignature = document.getElementById('modal-signature');
+            modalSignature.innerHTML = `${CONFIG.cartaSecreta.firmaLinea1}<br><span class="text-xs text-rose-200/80">${CONFIG.cartaSecreta.firmaLinea2}</span>`;
+        }
+
+        initAppContent();
+
+        /* =========================================================================
+           📱 MANEJO DEL SPLASH SCREEN & DESBLOQUEO DE AUDIO MÓVIL
+           ========================================================================= */
+        const splashScreen = document.getElementById('splash-screen');
+        const startBtn = document.getElementById('start-btn');
+
+        function startExperience(e) {
+            e.stopPropagation();
+            
+            // Iniciar reproducción de YouTube autorizada por toque táctil de usuario
+            if (ytPlayer && typeof ytPlayer.playVideo === 'function') {
+                ytPlayer.playVideo();
+                ytPlayer.unMute();
+            }
+
+            // Desvanecer el Splash Screen
+            splashScreen.classList.add('opacity-0');
+            setTimeout(() => {
+                splashScreen.classList.add('hidden');
+            }, 500);
+
+            // Ráfaga de corazones
+            const touchX = window.innerWidth / 2;
+            const touchY = window.innerHeight / 2;
+            spawnHearts(touchX, touchY, 15);
+        }
+
+        startBtn.addEventListener('click', startExperience);
+        startBtn.addEventListener('touchstart', startExperience, { passive: false });
+
+        /* =========================================================================
+           ⏱️ CONTADOR DE TIEMPO EN TIEMPO REAL
+           ========================================================================= */
+        function updateCounter() {
+            const now = new Date();
+            const diffMs = Math.max(0, now - CONFIG.fechaInicio);
+
+            const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diffMs / (1000 * 60 * 60)) % 24);
+            const minutes = Math.floor((diffMs / 1000 / 60) % 60);
+            const seconds = Math.floor((diffMs / 1000) % 60);
+
+            document.getElementById('count-days').textContent = days;
+            document.getElementById('count-hours').textContent = hours.toString().padStart(2, '0');
+            document.getElementById('count-minutes').textContent = minutes.toString().padStart(2, '0');
+            document.getElementById('count-seconds').textContent = seconds.toString().padStart(2, '0');
+        }
+
+        setInterval(updateCounter, 1000);
+        updateCounter();
+
+        /* =========================================================================
+           💖 CANVAS DE CORAZONES INTERACTIVOS (OPTIMIZADO PARA 60FPS MÓVIL)
+           ========================================================================= */
+        const canvas = document.getElementById('hearts-canvas');
+        const ctx = canvas.getContext('2d');
+        let width = canvas.width = window.innerWidth;
+        let height = canvas.height = window.innerHeight;
+
+        const hearts = [];
+        const isMobile = window.innerWidth < 640;
+        const maxHearts = isMobile ? 25 : 40;
+
+        window.addEventListener('resize', () => {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        });
+
+        class Heart {
+            constructor(x, y, isBurst = false) {
+                this.reset(x, y, isBurst);
+            }
+
+            reset(x, y, isBurst = false) {
+                this.x = x !== undefined ? x : Math.random() * width;
+                this.y = y !== undefined ? y : height + Math.random() * 30;
+                this.size = Math.random() * 12 + 8;
+                this.speedY = isBurst ? (Math.random() * -3.5 - 1) : (Math.random() * -1.2 - 0.4);
+                this.speedX = (Math.random() - 0.5) * (isBurst ? 3 : 0.7);
+                this.opacity = isBurst ? 0.95 : Math.random() * 0.45 + 0.2;
+                this.fadeSpeed = Math.random() * 0.004 + 0.002;
+                this.rotation = (Math.random() - 0.5) * 0.4;
+                this.color = Math.random() > 0.35 ? 'rgba(235, 77, 105,' : 'rgba(212, 175, 55,';
+            }
+
+            update() {
+                this.y += this.speedY;
+                this.x += this.speedX + Math.sin(this.y * 0.015) * 0.25;
+                this.opacity -= this.fadeSpeed;
+
+                if (this.opacity <= 0 || this.y < -30) {
+                    this.reset();
+                }
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.rotation);
+                ctx.fillStyle = `${this.color} ${this.opacity})`;
+
+                const s = this.size;
+                ctx.beginPath();
+                ctx.moveTo(0, s / 4);
+                ctx.quadraticCurveTo(0, 0, s / 4, 0);
+                ctx.quadraticCurveTo(s / 2, 0, s / 2, s / 3.5);
+                ctx.quadraticCurveTo(s / 2, 0, (s * 3) / 4, 0);
+                ctx.quadraticCurveTo(s, 0, s, s / 4);
+                ctx.quadraticCurveTo(s, s / 2, (s * 3) / 4, (s * 3) / 4);
+                ctx.lineTo(s / 2, s);
+                ctx.lineTo(s / 4, (s * 3) / 4);
+                ctx.quadraticCurveTo(0, s / 2, 0, s / 4);
+                ctx.closePath();
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        for (let i = 0; i < maxHearts; i++) {
+            hearts.push(new Heart(Math.random() * width, Math.random() * height));
+        }
+
+        function spawnHearts(x, y, count = 5) {
+            for (let i = 0; i < count; i++) {
+                if (hearts.length > 60) hearts.shift();
+                hearts.push(new Heart(x, y, true));
+            }
+        }
+
+        window.addEventListener('pointerdown', (e) => {
+            if (!e.target.closest('button') && !e.target.closest('#letter-modal')) {
+                spawnHearts(e.clientX, e.clientY, 4);
+            }
+        }, { passive: true });
+
+        function animateCanvas() {
+            ctx.clearRect(0, 0, width, height);
+            for (let i = 0; i < hearts.length; i++) {
+                hearts[i].update();
+                hearts[i].draw();
+            }
+            requestAnimationFrame(animateCanvas);
+        }
+
+        window.onload = function() {
+            animateCanvas();
+        };
+
+        /* =========================================================================
+           📩 CARTA SECRETA (MODAL RESPONSIVO MÓVIL)
+           ========================================================================= */
+        const letterModal = document.getElementById('letter-modal');
+        const openLetterBtn = document.getElementById('open-letter-btn');
+        const closeLetterBtn = document.getElementById('close-letter-btn');
+
+        function openModal() {
+            letterModal.classList.remove('hidden');
+            setTimeout(() => {
+                letterModal.classList.remove('opacity-0');
+            }, 10);
+            spawnHearts(width / 2, height / 2, 12);
+        }
+
+        function closeModal() {
+            letterModal.classList.add('opacity-0');
+            setTimeout(() => {
+                letterModal.classList.add('hidden');
+            }, 300);
+        }
+
+        openLetterBtn.addEventListener('click', openModal);
+        closeLetterBtn.addEventListener('click', closeModal);
+        letterModal.addEventListener('click', (e) => {
+            if (e.target === letterModal) closeModal();
+        });
+    </script>
+</body>
+</html>
